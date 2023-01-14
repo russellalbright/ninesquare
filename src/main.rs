@@ -1,17 +1,6 @@
 use itertools::Itertools;
 
-static mut _PIECES: [[i32; 4]; 9] = [
-   0 [1, 8, 6, 3],
-   1 [4, 9, 8, 3],
-   2 [2, 9, 7, 4],
-   3 [2, 6, 9, 3],
-   4 [1, 7, 8, 4],
-   5 [2, 6, 9, 3],
-   6 [2, 7, 9, 3],
-   7 [1, 6, 8, 4],
-   8 [2, 7, 9, 4],
-];
-// static mut _PIECES: [[i32; 4]; 9] = [
+// static mut pieces: [[i32; 4]; 9] = [
 //     [3, 5, 8, 4],
 //     [3, 5, 8, 2],
 //     [9, 3, 5, 6],
@@ -22,211 +11,276 @@ static mut _PIECES: [[i32; 4]; 9] = [
 //     [7, 5, 6, 9],
 //     [3, 2, 6, 7],
 // ];
-fn main() {
-    let _board = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-    //let _board = [0, 1, 2];
-    for attempt in _board.iter().permutations(_board.len()).unique() {
-        // let attempt = vec![8i32, 4, 0, 2, 6, 3, 1, 5, 7];
-        let attempt0 = vec![0i32, 1, 2, 3, 4, 5, 6, 7, 8];
-        let mut attempt3: Vec<&i32> = Vec::new();
-        let mut i = 0;
-        for my_int in attempt.iter() {
-            attempt3.push(&attempt0[i]);
-            i += 1;
-            // attempt2.push(&my_int);
-        }
-        i = 0;
-        for my_int in attempt.iter() {
-            attempt3[**my_int as usize] = &attempt0[i];
-            i += 1;
-            // attempt2.push(&my_int);
-        }
-        //println!("{:?}", attempt3);
+#[derive(Debug)]
+struct GamePiece {
+    piece: [i32; 4],
+}
 
+impl GamePiece {
+    pub fn new(a: i32, b: i32, c: i32, d: i32) -> Self {
+        Self {
+            piece: [a, b, c, d],
+        }
+    }
+    fn rotate(&mut self) {
+        self.piece.rotate_right(1);
+    }
+}
+#[derive(Debug)]
+pub struct GameBoard {
+    pieces: Vec<GamePiece>,
+    current_board: Vec<i32>,
+    lookup_index: Vec<i32>, //
+}
 
-        if test_answer(&attempt3) == true {
-            println!("{:?}", attempt);
-            println!("FOUND IT");
-            return;
+// Implementation block, all `Point` associated functions & methods go in here
+impl GameBoard {
+    pub fn new() -> Self {
+        let mut pieces: Vec<GamePiece> = Vec::new();
+        let mut piece: GamePiece = GamePiece::new(1, 8, 6, 3);
+        pieces.push(piece);
+        piece = GamePiece::new(4, 9, 8, 3);
+        pieces.push(piece);
+        piece = GamePiece::new(2, 9, 7, 4);
+        pieces.push(piece);
+        piece = GamePiece::new(2, 6, 9, 3);
+        pieces.push(piece);
+        piece = GamePiece::new(1, 7, 8, 4);
+        pieces.push(piece);
+        piece = GamePiece::new(2, 6, 9, 3);
+        pieces.push(piece);
+        piece = GamePiece::new(2, 7, 9, 3);
+        pieces.push(piece);
+        piece = GamePiece::new(1, 6, 8, 4);
+        pieces.push(piece);
+        piece = GamePiece::new(2, 7, 9, 4);
+        pieces.push(piece);
+        let current_board = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let lookup_index = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        Self {
+            pieces,
+            current_board,
+            lookup_index,
         }
     }
 
-    println!("no answer!");
-}
+    fn find_solution(&mut self) -> bool {
+        let mut _trash = 1;
+        let start_board = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+        for attempt in start_board.iter().permutations(start_board.len()).unique() {
+            // if _trash > 2 {
+            //     break;
+            // }
+            // _trash = _trash + 1;
+            //println!("attempt {:?}", attempt);
+            self.current_board.clear();
+            for my_int_ref in attempt.iter() {
+                self.current_board.push(**my_int_ref);
+            }
 
-fn test_answer(attempt: &Vec<&i32>) -> bool {
-    //check 4 surrounding the middle piece
-    for _i in 0..1 {
-        if check_1_4(attempt) == false {
-            continue;
+            //println!("self.current_board {:?}", self.current_board);
+            self.get_lookup_index();
+            if self.test_answer() == true {
+                println!("{:?}", self.current_board);
+                println!("FOUND IT");
+                return true;
+            } else {
+                //println!("NOT FOUND Yet");
+                // return false;
+            }
         }
-        // println!("{:?}  a ", attempt);
-
-        if check_3_4(attempt) == false {
-            continue;
-        }
-        // println!("{:?}  b", attempt);
-
-        if check_4_5(attempt) == false {
-            continue;
-        }
-        // println!("{:?}  c", attempt);
-
-        if check_4_7(attempt) == false {
-            continue;
-        }
-        // println!("{:?}  d", attempt);
-
-        if check_0(attempt) == false {
-            continue;
-        }
-
-        println!("{:?} check 0", attempt);
-
-        if check_2(attempt) == false {
-            continue;
-        }
-
-        println!("{:?} check 2", attempt);
-
-        if check_6(attempt) == false {
-            continue;
-        }
-        println!("{:?}  check 6", attempt);
-
-        if check_8(attempt) == false {
-            continue;
-        }
-        println!("{:?}  check 8", attempt);
-        return true;
-
-        //rotate(*attempt[4] as usize);
+        false
     }
-    return false;
-}
-
-fn rotate(i: usize) {
-    unsafe {
-        let temp = _PIECES[i][0];
-        _PIECES[i][0] = _PIECES[i][1];
-        _PIECES[i][1] = _PIECES[i][2];
-        _PIECES[i][2] = _PIECES[i][3];
-        _PIECES[i][3] = temp;
+    fn get_lookup_index(&mut self) {
+        for _i in 1..9 {
+            self.lookup_index[self.current_board[_i as usize] as usize] = _i;
+        }
     }
-}
+    fn test_answer(&mut self) -> bool {
+        //     //check 4 surrounding the middle piece
+        // for _i in 0..1 {
+        if self.check_1_4() == false {
+            return false;
+        }
+        // println!("{:?}  a ", );
 
-fn check_1_4(attempt: &Vec<&i32>) -> bool {
-    for _i in 0..4 {
-        unsafe {
-            // println!("{:?} squares {:?}", *attempt[1], *attempt[4]);
+        if self.check_3_4() == false {
+            return false;
+        }
+        // println!("{:?}  b", );
+
+        if self.check_4_5() == false {
+            return false;
+        }
+        // println!("{:?}  c", );
+
+        if self.check_4_7() == false {
+            return false;
+        }
+        // println!("{:?}  d", );
+
+        if self.check_0() == false {
+            return false;
+        }
+
+        if self.check_2() == false {
+            return false;
+        }
+
+        if self.check_6() == false {
+            return false;
+        }
+        if self.check_8() == false {
+            return false;
+        }
+        true
+    }
+    fn check_1_4(&mut self) -> bool {
+        for _i in 0..4 {
+            if self.pieces[self.lookup_index[1] as usize].piece[2]
+                + self.pieces[self.lookup_index[4] as usize].piece[0]
+                == 10
+            {
+                return true;
+            }
+            self.pieces[self.lookup_index[1] as usize].rotate();
+        }
+        return false;
+    }
+    fn check_3_4(&mut self) -> bool {
+        for _i in 0..4 {
+            if self.pieces[self.lookup_index[3] as usize].piece[1]
+                + self.pieces[self.lookup_index[4] as usize].piece[3]
+                == 10
+            {
+                return true;
+            }
+            self.pieces[self.lookup_index[3] as usize].rotate();
+        }
+        return false;
+    }
+    fn check_4_5(&mut self) -> bool {
+        for _i in 0..4 {
+            if self.pieces[self.lookup_index[4] as usize].piece[1]
+                + self.pieces[self.lookup_index[5] as usize].piece[3]
+                == 10
+            {
+                return true;
+            }
+            self.pieces[self.lookup_index[5] as usize].rotate();
+        }
+        return false;
+    }
+    fn check_4_7(&mut self) -> bool {
+        for _i in 0..4 {
+            if self.pieces[self.lookup_index[4] as usize].piece[2]
+                + self.pieces[self.lookup_index[7] as usize].piece[0]
+                == 10
+            {
+                return true;
+            }
+            self.pieces[self.lookup_index[7] as usize].rotate();
+        }
+        return false;
+    }
+    fn check_0(&mut self) -> bool {
+        for _i in 0..4 {
+            // println!(
+            //     "{:?} squares {:?}",
+            //     self.lookup_index[0], self.lookup_index[1]
+            // );
             // println!(
             //     "{:?} and {:?}",
-            //     _PIECES[*attempt[1] as usize][2], _PIECES[*attempt[4] as usize][0]
+            //     self.pieces[self.lookup_index[0] as usize].piece[1],
+            //     self.pieces[self.lookup_index[1] as usize].piece[3]
             // );
 
-            if _PIECES[*attempt[1] as usize][2] + _PIECES[*attempt[4] as usize][0] == 10 {
+            // println!(
+            //     "{:?} squares {:?}",
+            //     self.lookup_index[0], self.lookup_index[3]
+            // );
+            // println!(
+            //     "{:?} and {:?}",
+            //     self.pieces[self.lookup_index[0] as usize].piece[2],
+            //     self.pieces[self.lookup_index[3] as usize].piece[0]
+            // );
+
+            if self.pieces[self.lookup_index[0] as usize].piece[1]
+                + self.pieces[self.lookup_index[1] as usize].piece[3]
+                == 10
+                && self.pieces[self.lookup_index[0] as usize].piece[2]
+                    + self.pieces[self.lookup_index[3] as usize].piece[0]
+                    == 10
+            {
                 return true;
             }
+            self.pieces[self.lookup_index[0] as usize].rotate();
         }
-        rotate(*attempt[1] as usize);
+        return false;
     }
-    return false;
-}
-fn check_3_4(attempt: &Vec<&i32>) -> bool {
-    unsafe {
+    fn check_2(&mut self) -> bool {
         for _i in 0..4 {
-            if _PIECES[*attempt[3] as usize][1] + _PIECES[*attempt[4] as usize][3] == 10 {
+            if self.pieces[self.lookup_index[1] as usize].piece[1]
+                + self.pieces[self.lookup_index[2] as usize].piece[3]
+                == 10
+                && self.pieces[self.lookup_index[2] as usize].piece[2]
+                    + self.pieces[self.lookup_index[5] as usize].piece[0]
+                    == 10
+            {
                 return true;
             }
-            rotate(*attempt[3] as usize);
+            self.pieces[self.lookup_index[2] as usize].rotate();
         }
+        return false;
     }
-    return false;
-}
-fn check_4_5(attempt: &Vec<&i32>) -> bool {
-    unsafe {
+    fn check_6(&mut self) -> bool {
         for _i in 0..4 {
-            if _PIECES[*attempt[4] as usize][1] + _PIECES[*attempt[5] as usize][3] == 10 {
+            if self.pieces[self.lookup_index[3] as usize].piece[2]
+                + self.pieces[self.lookup_index[6] as usize].piece[0]
+                == 10
+                && self.pieces[self.lookup_index[6] as usize].piece[1]
+                    + self.pieces[self.lookup_index[7] as usize].piece[3]
+                    == 10
+            {
                 return true;
             }
-            rotate(*attempt[5] as usize);
+            self.pieces[self.lookup_index[6] as usize].rotate();
         }
+        return false;
     }
-    return false;
-}
-fn check_4_7(attempt: &Vec<&i32>) -> bool {
-    unsafe {
+    fn check_8(&mut self) -> bool {
         for _i in 0..4 {
-            if _PIECES[*attempt[4] as usize][2] + _PIECES[*attempt[7] as usize][0] == 10 {
+            if self.pieces[self.lookup_index[5] as usize].piece[2]
+                + self.pieces[self.lookup_index[8] as usize].piece[0]
+                == 10
+                && self.pieces[self.lookup_index[7] as usize].piece[1]
+                    + self.pieces[self.lookup_index[8] as usize].piece[3]
+                    == 10
+            {
                 return true;
             }
-            rotate(*attempt[7] as usize);
+            self.pieces[self.lookup_index[8] as usize].rotate();
         }
+        return false;
     }
-    return false;
 }
 
-fn check_0(attempt: &Vec<&i32>) -> bool {
-    for _i in 0..4 {
-        unsafe {
-            println!("{:?} squares {:?}", *attempt[0], *attempt[1]);
-            println!(
-                "{:?} and {:?}",
-                _PIECES[*attempt[0] as usize][1], _PIECES[*attempt[1] as usize][3]
-            );
+fn main() {
+    let mut mygame = GameBoard::new();
+    println!("{:?}", mygame);
+    if mygame.find_solution() {
+        println!("success")
+    }
+    else{
+    println!("no answer!");
+    }
+}
 
-            println!("{:?} squares {:?}", *attempt[0], *attempt[3]);
-            println!(
-                "{:?} and {:?}",
-                _PIECES[*attempt[0] as usize][2], _PIECES[*attempt[3] as usize][0]
-            );
-
-            if _PIECES[*attempt[0] as usize][1] + _PIECES[*attempt[1] as usize][3] == 10
-                && _PIECES[*attempt[0] as usize][2] + _PIECES[*attempt[3] as usize][0] == 10
-            {
-                return true;
-            }
-            rotate(*attempt[0] as usize);
-        }
-    }
-    return false;
-}
-fn check_2(attempt: &Vec<&i32>) -> bool {
-    for _i in 0..4 {
-        unsafe {
-            if _PIECES[*attempt[1] as usize][1] + _PIECES[*attempt[2] as usize][3] == 10
-                && _PIECES[*attempt[2] as usize][2] + _PIECES[*attempt[5] as usize][0] == 10
-            {
-                return true;
-            }
-            rotate(*attempt[2] as usize);
-        }
-    }
-    return false;
-}
-fn check_6(attempt: &Vec<&i32>) -> bool {
-    for _i in 0..4 {
-        unsafe {
-            if _PIECES[*attempt[3] as usize][2] + _PIECES[*attempt[6] as usize][0] == 10
-                && _PIECES[*attempt[6] as usize][1] + _PIECES[*attempt[7] as usize][3] == 10
-            {
-                return true;
-            }
-            rotate(*attempt[6] as usize);
-        }
-    }
-    return false;
-}
-fn check_8(attempt: &Vec<&i32>) -> bool {
-    for _i in 0..4 {
-        unsafe {
-            if _PIECES[*attempt[5] as usize][2] + _PIECES[*attempt[8] as usize][0] == 10
-                && _PIECES[*attempt[7] as usize][1] + _PIECES[*attempt[8] as usize][3] == 10
-            {
-                return true;
-            }
-            rotate(*attempt[8] as usize);
-        }
-    }
-    return false;
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     #[test]
+//     fn test_add() {
+//         assert_eq!(add(2, 2), 4);
+//     }
+// }
