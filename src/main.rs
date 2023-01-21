@@ -270,17 +270,19 @@ fn main() {
     println!("{:?}", mygame);
     if mygame.find_solution() {
         println!("success")
-    }
-    else{
-    println!("no answer!");
+    } else {
+        println!("no answer!");
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     #[test]
-//     fn test_add() {
-//         assert_eq!(add(2, 2), 4);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_rotate() {
+        let mut gp = GamePiece::new(4, 9, 8, 3);
+        let gp2 = GamePiece::new(3, 4, 9, 8);
+        gp.rotate();
+        assert_eq!(gp.piece, gp2.piece);
+    }
+}
